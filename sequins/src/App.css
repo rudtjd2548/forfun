@@ -1,0 +1,27 @@
+.App {
+}
+
+.DragContainer {
+  display: flex;
+  box-sizing: border-box;
+
+  flex-flow: row wrap;
+  justify-content: space-around;
+  align-content: center;
+
+  margin: 0 auto;
+  height: 100%;
+  border: 1px solid red;
+}
+
+.Cell {
+  display: inline-flex;
+  width: 1rem;
+  height: 1rem;
+  margin: 0.1rem;
+  background-color: sandybrown;
+}
+
+.Cell-clicked {
+  background-color: brown;
+}
