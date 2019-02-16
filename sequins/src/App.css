@@ -1,4 +1,9 @@
 .App {
+  display: flex;
+
+  box-sizing: border-box;
+  height: 100%;
+  align-items: center;
 }
 
 .DragContainer {
@@ -11,17 +16,16 @@
 
   margin: 0 auto;
   height: 100%;
-  border: 1px solid red;
 }
 
 .Cell {
+  box-sizing: border-box;
   display: inline-flex;
-  width: 1rem;
-  height: 1rem;
-  margin: 0.1rem;
-  background-color: sandybrown;
+  border-radius: 4px;
+  border: 1px solid #d3cfcd;
+  background-color: #aca899;
 }
 
 .Cell-clicked {
-  background-color: brown;
+  background-color: #413b38;
 }
