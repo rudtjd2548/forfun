@@ -1,10 +1,11 @@
-import React, { useState, useLayoutEffect, useEffect } from 'react';
+import React, { useState, useLayoutEffect, useEffect, memo } from 'react';
 import './App.css';
 
-const DragContainer = ({ dimension, cellSize }) => {
+const DragContainer = memo(({ dimension, cellSize }) => {
   const [Isclicking, setIsClicking] = useState(false);
   const [clickedCells, setClickedCells] = useState([]);
   const [totalBoxs, setTotalBoxs] = useState(0);
+  const [clientY, setClientY] = useState(0);
 
   useEffect(() => {
     const floorWidth = Math.floor(dimension.width / cellSize);
@@ -15,20 +16,52 @@ const DragContainer = ({ dimension, cellSize }) => {
   const mouseDownHandler = e => {
     e.preventDefault();
     setIsClicking(true);
+  };
 
+  const mouseOverHandler = e => {
+    e.preventDefault();
+    if (!e.target.getAttribute('name')) return;
     const cell = Number(e.target.getAttribute('name'));
     const floorWidth = Math.floor(dimension.width / cellSize);
-    const cellRange = [
-      cell - 1,
-      cell,
-      cell + 1,
-      cell + floorWidth,
-      cell - floorWidth
-    ];
-    console.log([...cellRange]);
-    clickedCells.find(el => el === cell)
-      ? setClickedCells(clickedCells.filter(el => el !== cell))
-      : setClickedCells(prevState => [...prevState, ...[...cellRange]]);
+    let cellRange;
+
+    if ((cell - floorWidth) % floorWidth === 0) {
+      cellRange = [
+        cell - 1,
+        cell,
+        cell + floorWidth,
+        cell + floorWidth - 1,
+        cell - floorWidth,
+        cell - floorWidth - 1
+      ];
+    } else if ((cell - floorWidth) % floorWidth === 1) {
+      cellRange = [
+        cell,
+        cell + 1,
+        cell + floorWidth,
+        cell + floorWidth + 1,
+        cell - floorWidth,
+        cell - floorWidth + 1
+      ];
+    } else {
+      cellRange = [
+        cell - 1,
+        cell,
+        cell + 1,
+        cell + floorWidth,
+        cell + floorWidth + 1,
+        cell + floorWidth - 1,
+        cell - floorWidth,
+        cell - floorWidth + 1,
+        cell - floorWidth - 1
+      ];
+    }
+
+    if (Isclicking) {
+      e.nativeEvent.clientY > clientY
+        ? setClickedCells(prevState => [...prevState, ...cellRange])
+        : setClickedCells(clickedCells.filter(el => !cellRange.includes(el)));
+    }
   };
 
   const mouseUpHandler = e => {
@@ -36,35 +69,17 @@ const DragContainer = ({ dimension, cellSize }) => {
     setIsClicking(false);
   };
 
-  const mouseOverHandler = e => {
-    e.preventDefault();
-    const cell = Number(e.target.getAttribute('name'));
-    if (Isclicking) {
-      clickedCells.find(el => el === cell)
-        ? setClickedCells(clickedCells.filter(el => el !== cell))
-        : setClickedCells(prevState => [...prevState, cell]);
-    }
-  };
-
   const mouseLeaveHandler = e => {
     e.preventDefault();
     setIsClicking(false);
   };
 
-  let cells = [];
-  for (let i = 1; i < totalBoxs + 1; i++) {
-    cells.push(
-      <div
-        key={i}
-        name={i}
-        className={
-          clickedCells.find(el => el === i) ? `Cell Cell-clicked` : 'Cell'
-        }
-        style={{ width: `${cellSize}px`, height: `${cellSize}px` }}
-      />
-    );
-  }
-  console.log('[DragContainer] is rendered');
+  const mouseMoveHandler = e => {
+    e.preventDefault();
+    setClientY(e.nativeEvent.clientY);
+  };
+
+  //console.log('[DragContainer] is rendered');
   return (
     <div
       className='DragContainer'
@@ -72,11 +87,47 @@ const DragContainer = ({ dimension, cellSize }) => {
       onMouseUp={mouseUpHandler}
       onMouseLeave={mouseLeaveHandler}
       onMouseOver={mouseOverHandler}
+      onMouseMove={mouseMoveHandler}
     >
-      {cells}
+      <Cells
+        totalBoxs={totalBoxs}
+        cellSize={cellSize}
+        clickedCells={clickedCells}
+      />
     </div>
   );
-};
+});
+
+const Cells = memo(props => {
+  let cells = [];
+  for (let i = 1; i < props.totalBoxs + 1; i++) {
+    cells.push(
+      <div
+        key={i}
+        className='Cell-box'
+        style={{
+          width: `${props.cellSize}px`,
+          height: `${props.cellSize}px`
+        }}
+      >
+        <div
+          name={i}
+          style={
+            props.clickedCells.find(el => el === i)
+              ? { zIndex: `${props.totalBoxs - i}` }
+              : null
+          }
+          className={
+            props.clickedCells.find(el => el === i)
+              ? `Cell Cell-clicked`
+              : 'Cell'
+          }
+        />
+      </div>
+    );
+  }
+  return cells;
+});
 
 const App = () => {
   const [dimension, setDimension] = useState({
@@ -100,7 +151,7 @@ const App = () => {
   }, [isResizing]);
   return (
     <div className='App'>
-      <DragContainer dimension={dimension} cellSize='15' />
+      <DragContainer dimension={dimension} cellSize='35' />
     </div>
   );
 };
